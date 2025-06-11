@@ -12,19 +12,28 @@ const oneLevelStrategy = {
     const pageNumber = virtualAddress >> p;
     const offset = virtualAddress & (pageSize - 1);
 
+    console.log(` -> Número da pagina (VPN): ${pageNumber}`);
+    console.log(` -> Deslocamento (Offset): ${offset}`);
+
     let frameNumber;
 
     if (pageTable[pageNumber] !== -1) {
       frameNumber = pageTable[pageNumber];
+      console.log(` -> Acesso a pagina ${pageNumber}: MAPEADA para moldura ${frameNumber}`)
     } else {
+      console.log(` -> Acesso a pagina ${pageNumber}: NÃO MAPEADA. Procurando por uma moldura livre...`);
       const freeFrameIndex = physicalMemory.findIndex(frame => frame === -1);
       if (freeFrameIndex === -1) {
         throw new Error("Memória física lotada.");
       }
+
+      console.log(` -> Moldura livre encontrada: ${freeFrameIndex}. Alocando...`)
+
       pageTable[pageNumber] = freeFrameIndex;
       physicalMemory[freeFrameIndex] = 1;
       frameNumber = freeFrameIndex
     }
+    console.log(` -> Mapeamento final: Página ${pageNumber} -> Moldura ${frameNumber}`)
     return frameNumber
   }
 }
