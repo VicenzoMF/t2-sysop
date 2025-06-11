@@ -1,0 +1,11 @@
+{
+  "virtualAddressBits": 16,
+  "physicalMemoryBits": 14,
+  "pageSizeBits": 10,
+  "segments": {
+    "text": 4096,
+    "data": 6144,
+    "stack": 6144
+  },
+  "pageTableType": "1-level"
+}
