@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { pageTableStrategies } = require('./pageTableHandler');
 
 console.log("---=== Iniciando Simulador de Memória ===---");
 
@@ -16,6 +17,8 @@ console.log(`\nTamanho da Página: ${pageSize} bytes`);
 console.log(`Número de Páginas Virtuais: ${numVirtualPages}`);
 console.log(`Número de Molduras Físicas: ${numPhysicalFrames}`);
 
+const p = config.pageSizeBits;
+
 const virtualAddresses = fs.readFileSync('entrada.txt', 'utf8')
   .split('\n')
   .filter(line => line.trim() !== '')
@@ -23,68 +26,40 @@ const virtualAddresses = fs.readFileSync('entrada.txt', 'utf8')
 
 console.log("\nEndereços virtuais a serem processados:", virtualAddresses);
 
+const strategy = pageTableStrategies[config.pageTableType];
+
 const physicalMemory = new Array(numPhysicalFrames).fill(-1);
-const pageTable = new Array(numVirtualPages).fill(-1);
+const pageTable = strategy.initialize(numVirtualPages, config);
 
-console.log("\nMemória Física inicializada.");
-console.log("Tabela de Páginas inicializada.");
-
+console.log("\nMemória física inicializada")
 fs.writeFileSync('saida.txt', '');
 
 console.log("\n--- Início da SImulação ---");
 
-const p = config.pageSizeBits;
-
 virtualAddresses.forEach(virtualAddress => {
-  const pageNumber = virtualAddress >> p
-  const offset = virtualAddress & (pageSize - 1);
+  try {
+    const frameNumber = strategy.translate(virtualAddress, pageTable, physicalMemory, config)
+    const offset = virtualAddress & (pageSize - 1);
 
-  console.log(`\nAnalisando Endereço Virtual: ${virtualAddress}`);
-  console.log(` -> Número da Página (VPN): ${pageNumber}`);
-  console.log(` -> Deslocamento (Offset): ${offset}`);
+    const physicalAddress = (frameNumber << p) | offset;
 
-  let frameNumber;
+    console.log(`\nAnalisando endereço virtual: ${virtualAddress} -> Endereço físico ${physicalAddress}`)
 
-  if(pageTable[pageNumber] !== -1) {
-    frameNumber = pageTable[pageNumber];
-    console.log(` -> Acesso à página ${pageNumber}: MAPEADA para moldura ${frameNumber}.`);
-  } else {
-    console.log(` -> Acesso à página ${pageNumber}: NÃO MAPEADA.Procurando uma moldura livre...`);
-
-    const freeFrameIndex = physicalMemory.findIndex(frame => frame === -1);
-
-    if(freeFrameIndex === -1) {
-      console.error("ERRO: Memória física lotada.")
-
-      
-      process.exit(1)
-    }
-
-    console.log(` -> Moldura livre encontrada: ${freeFrameIndex}. Alocando...`);
-
-    pageTable[pageNumber] = freeFrameIndex;
-
-    physicalMemory[freeFrameIndex] = 1;
-
-    frameNumber = freeFrameIndex;
-  }
-
-  console.log(` -> Mapeamento final: Página ${pageNumber} -> Moldura ${frameNumber}`);
-
-  const physicalAddress = (frameNumber << p) | offset;
-  console.log(` -> Endereço fisico calculado: ${physicalAddress}`);
-
-  const outputString = `
+    const outputString = `
 Endereço virtual: ${virtualAddress}
 Endereço físico: ${physicalAddress}
-Tabela de páginas: ${JSON.stringify(pageTable)}
+Tabela de páginas: ${JSON.stringify(pageTable, null, 2)}
 Memória física: ${JSON.stringify(physicalMemory)}
 `;
+    fs.appendFileSync('saida.txt', outputString, 'utf8')
 
-  fs.appendFileSync('saida.txt', outputString, 'utf8');
-
-  console.log("\n\nResultados em 'saida.txt'");
+  } catch (error) {
+    console.error(`Erro ao processar endereço ${virtualAddress}: ${error.message}`)
+    process.exit(1);
+  }
 })
+
+console.log("\n\n\n Resultaados detalhados salvos em 'saida.txt'")
 
 
 
