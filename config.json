@@ -7,5 +7,6 @@
     "data": 6144,
     "stack": 6144
   },
-  "pageTableType": "1-level"
+  "pageTableType": "inverted",
+  "p1_bits": 3
 }
