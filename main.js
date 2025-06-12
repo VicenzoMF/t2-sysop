@@ -38,12 +38,13 @@ console.log("\n--- Início da SImulação ---");
 
 virtualAddresses.forEach(virtualAddress => {
   try {
+    console.log(`\n\n Analisando endereço virtual: ${virtualAddress}`)
     const frameNumber = strategy.translate(virtualAddress, pageTable, physicalMemory, config)
-    const offset = virtualAddress & (pageSize - 1);
 
+    const offset = virtualAddress & (pageSize - 1);
     const physicalAddress = (frameNumber << p) | offset;
 
-    console.log(`\nAnalisando endereço virtual: ${virtualAddress} -> Endereço físico ${physicalAddress}`)
+    console.log(` -> Endereço físico ${physicalAddress}`)
 
     const outputString = `
 Endereço virtual: ${virtualAddress}

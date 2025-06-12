@@ -30,7 +30,7 @@ const oneLevelStrategy = {
       console.log(` -> Moldura livre encontrada: ${freeFrameIndex}. Alocando...`)
 
       pageTable[pageNumber] = freeFrameIndex;
-      physicalMemory[freeFrameIndex] = 1;
+      physicalMemory[freeFrameIndex] = pageNumber;
       frameNumber = freeFrameIndex
     }
     console.log(` -> Mapeamento final: Página ${pageNumber} -> Moldura ${frameNumber}`)
