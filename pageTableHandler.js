@@ -105,19 +105,44 @@ const twoLevelStrategy = {
 const invertedStrategy = {
   initialize: (numPhysicalFrames) => {
     console.log("Inicializando tabela de páginas invertida");
-    // TODO
-    return [];
+
+    return new Array(numPhysicalFrames).fill(-1);
   },
   translate: (virtualAddress, pageTable, physicalMemory, config) => {
-    // TODO
-    return -1;
+    const p = config.pageSizeBits;
+    const pageNumber = virtualAddress >>p;
+
+    console.log(` -> Página Virtual a ser encontrada: ${pageNumber}`);
+
+    let frameNumber = pageTable.findIndex(mappedPage => mappedPage === pageNumber);
+
+    if (frameNumber !== -1) {
+      console.log(` -> HIT. Página ${pageNumber} encontrada na moldura ${frameNumber}`)
+    } else {
+      console.log(` -> MISS. Página ${pageNumber} não encontrada. Procurando moldura livre...`)
+
+      const freeFrameIndex = physicalMemory.findIndex(frame => frame === -1)
+      if(freeFrameIndex === -1) {
+        throw new Error("Memória física lotada.")
+      }
+
+      console.log(` -> Moldura livre encontrada: ${freeFrameIndex}. Alocando...`)
+
+      pageTable[freeFrameIndex] = pageNumber;
+      physicalMemory[freeFrameIndex] = pageNumber;
+
+      frameNumber = freeFrameIndex;
+    }
+
+    console.log(` -> Mapeamento final: Página ${pageNumber} -> Moldura ${frameNumber}`)
+    return frameNumber;
   },
 };
 
 const pageTableStrategies = {
   "1-level": oneLevelStrategy,
   "2-level": twoLevelStrategy,
-  inverted: invertedStrategy,
+  "inverted": invertedStrategy,
 };
 
 module.exports = { pageTableStrategies };

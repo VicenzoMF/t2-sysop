@@ -41,7 +41,13 @@ console.log("\nEndereços virtuais a serem processados:", virtualAddresses);
 const strategy = pageTableStrategies[config.pageTableType];
 
 const physicalMemory = new Array(numPhysicalFrames).fill(-1);
-const pageTable = strategy.initialize(numVirtualPages, config);
+
+let pageTable;
+if (config.pageTableType === 'inverted') {
+  pageTable = strategy.initialize(numPhysicalFrames, config);
+} else {
+  pageTable = strategy.initialize(numVirtualPages, config);
+}
 
 console.log("\nMemória física inicializada");
 fs.writeFileSync("saida.txt", "");
